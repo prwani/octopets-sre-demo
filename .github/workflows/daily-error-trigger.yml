@@ -1,0 +1,70 @@
+name: Daily Error Trigger for SRE Agent Testing
+
+on:
+  schedule:
+    # Runs at 5:00 AM UTC every day
+    - cron: '0 5 * * *'
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+
+jobs:
+  trigger-errors:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Trigger memory leak errors
+        run: |
+          echo "🔥 Triggering memory leak errors at $(date -u)"
+          echo ""
+          
+          BACKEND_URL="https://octopetsapi.lemonbay-f7324bec.eastus2.azurecontainerapps.io"
+          
+          # Wake up the apps
+          echo "1. Waking up frontend..."
+          curl -s -o /dev/null -w "Frontend Status: %{http_code}\n" \
+            "https://octopetsfe.lemonbay-f7324bec.eastus2.azurecontainerapps.io"
+          sleep 2
+          
+          # Trigger memory leak 5 times
+          echo ""
+          echo "2. Triggering memory leak (5 API calls)..."
+          echo ""
+          
+          for i in {1..5}; do
+            echo "   Request $i/5: GET /api/listings/$i"
+            
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/api/listings/$i")
+            
+            if [ "$HTTP_CODE" == "200" ]; then
+              echo "   ✅ Success (HTTP $HTTP_CODE) - Memory allocated"
+            elif [ "$HTTP_CODE" == "404" ]; then
+              echo "   ⚠️  Not Found (HTTP $HTTP_CODE) - Trying next ID"
+            else
+              echo "   🔴 Error (HTTP $HTTP_CODE) - Memory leak causing failures"
+            fi
+            
+            sleep 1
+          done
+          
+          echo ""
+          echo "✅ Error trigger complete"
+          echo "⏳ Errors will accumulate in Application Insights"
+          echo "🤖 SRE Agent can now diagnose these errors"
+      
+      - name: Summary
+        run: |
+          echo ""
+          echo "╔════════════════════════════════════════════════════════════╗"
+          echo "║        Daily Error Trigger - Completed Successfully        ║"
+          echo "╚════════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "Triggered at: $(date -u)"
+          echo "Next run: Tomorrow at 5:00 AM UTC"
+          echo ""
+          echo "Check errors in Application Insights:"
+          echo "  Resource Group: rg-octopets-sre-demo"
+          echo "  App Insights: octopets_appinsights-w2shk6ckv6at4"
+          echo ""
+          echo "Test SRE Agent diagnosis in the portal!"
