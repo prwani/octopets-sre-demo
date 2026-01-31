@@ -9,6 +9,7 @@ public static class ListingEndpoints
     {
         // Create lists to hold a reasonable amount of data
         var memoryHogs = new List<byte[]>();
+        var random = new Random();
 
         // Allocate memory in chunks - reduced to prevent OutOfMemoryException
         // Each iteration allocates 10MB (safe amount)
@@ -18,7 +19,7 @@ public static class ListingEndpoints
             var largeArray = new byte[10 * 1024 * 1024];
 
             // Fill with random data to ensure memory is actually allocated
-            new Random().NextBytes(largeArray);
+            random.NextBytes(largeArray);
 
             // Add to list to prevent garbage collection
             memoryHogs.Add(largeArray);
