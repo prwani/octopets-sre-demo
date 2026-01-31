@@ -4,7 +4,8 @@ using Octopets.Backend.Repositories.Interfaces;
 namespace Octopets.Backend.Endpoints;
 
 public static class ListingEndpoints
-{    // Method to simulate an expensive operation without causing OOM
+{
+    // Method to simulate an expensive operation without causing OOM
     private static void AReallyExpensiveOperation()
     {
         // Create lists to hold a reasonable amount of data
